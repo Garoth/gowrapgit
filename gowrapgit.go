@@ -3,10 +3,12 @@ package gowrapgit
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -136,3 +138,49 @@ func Checkout(path, hashish string) error {
 
 	return nil
 }
+
+// Commit struct that holds the sort of data that you'd expect from git log.
+type Commit struct {
+	hash, author, authorEmail, parentHash, subject, body string
+	timestamp                                            int
+}
+
+func (commit *Commit) String() string {
+	return fmt.Sprintf("\n+ Commit: %s\n| Author: %s <%s>\n| Parent: %s\n"+
+		"| Timestamp: %d\n| Subject: %s\n+ Body: %s", commit.hash, commit.author,
+		commit.authorEmail, commit.parentHash, commit.timestamp,
+		commit.subject, commit.body)
+}
+
+// NewCommit returns a commit object for the given repo path and hashish.
+func NewCommit(path, hashish string) (*Commit, error) {
+	logFormat := "%H%n%an%n%ae%n%ct%n%P%n%s%n%b"
+	commit := &Commit{}
+
+	cmd := command("git", "log", "-1", "--pretty="+logFormat, hashish)
+	cmd.Dir = path
+	output, err := cmd.Output()
+	if err != nil {
+		return &Commit{}, err
+	}
+
+	lineBytes := bytes.Split(output, []byte{'\n'})
+	commit.hash = string(bytes.TrimSpace(lineBytes[0]))
+	commit.author = string(bytes.TrimSpace(lineBytes[1]))
+	commit.authorEmail = string(bytes.TrimSpace(lineBytes[2]))
+	commit.timestamp, err = strconv.Atoi(string(bytes.TrimSpace(lineBytes[3])))
+	if err != nil {
+		return &Commit{}, err
+	}
+	commit.parentHash = string(bytes.TrimSpace(lineBytes[4]))
+	commit.subject = string(bytes.TrimSpace(lineBytes[5]))
+	commit.body = string(bytes.TrimSpace(bytes.Join(lineBytes[6:], []byte{'\n'})))
+
+	return commit, nil
+}
+
+// Log returns an array of Commit objects, representing the history as like
+// git log. Newest commit is at index zero, oldest at the end.
+// func Log(path, hashish string) (*Commit[], error) {
+
+// }

@@ -176,3 +176,19 @@ func TestBranch(t *testing.T) {
 
 	t.Log(" - Success checking detached head branch:", branch)
 }
+
+func TestNewCommit(t *testing.T) {
+	t.Log("Cloning a git repo...")
+
+	path := setupTestClone(false, t)
+	defer cleanupTestClone(path, t)
+
+	t.Log(" - Test repo cloned to", prettyPath(path))
+
+	commit, err := NewCommit(path, "HEAD")
+	if err != nil {
+		t.Fatal("Error creating new Commit object:", err)
+	}
+
+	t.Logf(" - Created new Commit object: %+v", commit)
+}
