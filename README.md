@@ -32,6 +32,7 @@ functions.
     - [ ] Get All Local Branches
     - [ ] Get All Remote Branches
 - [X] Find All Git Repos Recursively From Path
+- [ ] Reset (hard and soft)
 - [ ] Worktree 
     - [ ] Spawn New Worktree From Parent
     - [ ] Find Parent Of Worktree
