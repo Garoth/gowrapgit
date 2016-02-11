@@ -137,3 +137,24 @@ func TestFindGits(t *testing.T) {
 
 	t.Log(" - FindGits found repos successfully! count =", len(results))
 }
+
+func TestBranch(t *testing.T) {
+	t.Log("Cloning a git repo...")
+
+	path := setupTestClone(false, t)
+	defer cleanupTestClone(path, t)
+
+	t.Log(" - Test repo cloned to", prettyPath(path))
+
+	branch, err := CurrentBranch(path)
+
+	if err != nil {
+		t.Fatal("Couldn't check current branch:", err)
+	}
+
+	if branch != "master" {
+		t.Fatal("Incorrect branch found. Expect master, found:", branch)
+	}
+
+	t.Log(" - Success checking branch:", branch)
+}

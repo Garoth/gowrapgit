@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 // Returns a command object for the given shell command.
@@ -101,4 +102,21 @@ func FindGits(start string) []string {
 	filepath.Walk(start, walker)
 
 	return paths
+}
+
+// CurrentBranch reports the current active branch for the repo at the given
+// path. If there is no active branch, no repo, or otherwise -- this errors.
+func CurrentBranch(path string) (string, error) {
+	if err := sanityCheck(); err != nil {
+		return "", err
+	}
+
+	cmd := command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	cmd.Dir = path
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(out)), nil
 }
