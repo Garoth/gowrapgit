@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 // Returns a command object for the given shell command.
@@ -66,7 +67,7 @@ func IsBareRepo(path string) error {
 
 // Clone clones a git repo. It takes a full path to clone to, a full path
 // (or URL) to clone from, and whether it should be a bare git repo.
-func Clone(cloneToPath, cloneFromPath string, bare bool) error {
+func Clone(cloneFromPath, cloneToPath string, bare bool) error {
 	if err := sanityCheck(); err != nil {
 		return err
 	}
@@ -81,4 +82,23 @@ func Clone(cloneToPath, cloneFromPath string, bare bool) error {
 	}
 
 	return command("git", "clone", cloneFromPath, cloneToPath).Run()
+}
+
+// FindGits returns a set of paths for all found git repositories under the
+// given starting filepath. This will recursively walk down to find them.
+func FindGits(start string) []string {
+	var paths []string
+
+	walker := func(path string, info os.FileInfo, err error) error {
+		if IsRepo(path) == nil {
+			paths = append(paths, path)
+			return filepath.SkipDir
+		}
+
+		return nil
+	}
+
+	filepath.Walk(start, walker)
+
+	return paths
 }

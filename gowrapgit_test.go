@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -26,7 +27,7 @@ func setupTestClone(bare bool, t *testing.T) (path string) {
 	}
 
 	path = path + "/go-signalhandlers"
-	if err = Clone(path, source, bare); err != nil {
+	if err = Clone(source, path, bare); err != nil {
 		t.Fatal("Error cloning go-signalhandlers:", err)
 	}
 
@@ -92,4 +93,47 @@ func TestCloneBare(t *testing.T) {
 
 	t.Log(" - IsBareRepo confirmed repo as BARE")
 
+}
+
+func TestFindGits(t *testing.T) {
+	t.Log("Creating fresh git clone...")
+
+	repo1 := setupTestClone(false, t)
+	location := filepath.Dir(repo1)
+	repo2 := filepath.Join(location, "a", "b", "c")
+	repo3 := filepath.Join(location, "flat")
+	repo4 := filepath.Join(location, "xxx", "yyy")
+	defer cleanupTestClone(repo1, t)
+
+	t.Log(" - Test repo 1 cloned to", prettyPath(repo1))
+
+	if err := Clone(repo1, repo2, true); err != nil {
+		t.Fatal("Failed to clone repo:", err)
+	}
+	defer cleanupTestClone(repo2, t)
+
+	t.Log(" - Test repo 2 cloned")
+
+	if err := Clone(repo1, repo3, false); err != nil {
+		t.Fatal("Failed to clone repo:", err)
+	}
+	defer cleanupTestClone(repo3, t)
+
+	t.Log(" - Test repo 3 cloned")
+
+	if err := Clone(repo2, repo4, false); err != nil {
+		t.Fatal("Failed to clone repo:", err)
+	}
+	defer cleanupTestClone(repo4, t)
+
+	t.Log(" - Test repo 4 cloned")
+
+	results := FindGits(location)
+	expected := []string{repo2, repo3, repo1, repo4}
+
+	if reflect.DeepEqual(results, expected) == false {
+		t.Fatal("FindGits failed. results =", results, "expected =", expected)
+	}
+
+	t.Log(" - FindGits found repos successfully! count =", len(results))
 }
