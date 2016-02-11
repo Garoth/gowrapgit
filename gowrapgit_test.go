@@ -157,4 +157,22 @@ func TestBranch(t *testing.T) {
 	}
 
 	t.Log(" - Success checking branch:", branch)
+
+	if err = Checkout(path, "HEAD~1"); err != nil {
+		t.Fatal("Failed to checkout previous commit:", err)
+	}
+
+	t.Log(" - Success checking out HEAD~1 in repo")
+
+	branch, err = CurrentBranch(path)
+
+	if err != nil {
+		t.Fatal("Couldn't check current branch:", err)
+	}
+
+	if branch != "HEAD" {
+		t.Fatal("Incorrect ref name found. Expect HEAD, found:", branch)
+	}
+
+	t.Log(" - Success checking detached head branch:", branch)
 }

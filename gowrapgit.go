@@ -105,7 +105,7 @@ func FindGits(start string) []string {
 }
 
 // CurrentBranch reports the current active branch for the repo at the given
-// path. If there is no active branch, no repo, or otherwise -- this errors.
+// path. As normal, returns "HEAD" when we're not on an otherwise named head.
 func CurrentBranch(path string) (string, error) {
 	if err := sanityCheck(); err != nil {
 		return "", err
@@ -119,4 +119,20 @@ func CurrentBranch(path string) (string, error) {
 	}
 
 	return strings.TrimSpace(string(out)), nil
+}
+
+// Checkout runs the git checkout command. This can be used to switch branches
+// or to check out disconnected heads.
+func Checkout(path, hashish string) error {
+	if err := sanityCheck(); err != nil {
+		return err
+	}
+
+	cmd := command("git", "checkout", hashish)
+	cmd.Dir = path
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	return nil
 }
