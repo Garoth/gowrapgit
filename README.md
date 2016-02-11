@@ -2,9 +2,10 @@
 
 This project provides a Go API to common Git functions. It is implemented
 as a simple `git` command shell wrapper, so it doesn't have any complex
-non-Go dependencies.
+non-Go dependencies. Want to know if it's any good?
 
-Documentation: https://godoc.org/github.com/Garoth/gowrapgit
+- Documentation: https://godoc.org/github.com/Garoth/gowrapgit
+- Code Quality Report: https://goreportcard.com/report/github.com/Garoth/gowrapgit
 
 If you're looking for a much more complete and down-to-the-metal implementation,
 I recommend looking at https://github.com/libgit2/git2go. That project wraps
