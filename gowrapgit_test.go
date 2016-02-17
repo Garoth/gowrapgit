@@ -39,7 +39,7 @@ func setupTestClone(bare bool, t *testing.T) string {
 		cmd := command("git", "commit", "--allow-empty",
 			"--date", "1000000000",
 			"--author", "Andrei Thorp <garoth@gmail.com>",
-			"-m", "subject "+strconv.Itoa(numCommits),
+			"-m", "subject "+strconv.Itoa(x),
 			"-m", "body message")
 		cmd.Dir = path
 		env := os.Environ()
@@ -212,14 +212,11 @@ func TestNewCommit(t *testing.T) {
 	expected.author = "Andrei Thorp"
 	expected.authorEmail = "garoth@gmail.com"
 	expected.timestamp = 1000000000
-	expected.subject = "subject 3"
+	expected.subject = "subject 2"
 	expected.body = "body message"
 
-	t.Log("Cloning a git repo...")
-
 	path := setupTestClone(false, t)
-	// defer cleanupTestClone(path, t)
-
+	defer cleanupTestClone(path, t)
 	t.Log(" - Test repo cloned to", prettyPath(path))
 
 	commit, err := NewCommit(path, "HEAD")
@@ -240,3 +237,22 @@ func TestNewCommit(t *testing.T) {
 
 	t.Log(" - New Commit matches expectations")
 }
+
+func TestLog(t *testing.T) {
+	path := setupTestClone(false, t)
+	defer cleanupTestClone(path, t)
+	t.Log(" - Test repo cloned to", prettyPath(path))
+
+	log, err := Log(path, "")
+	if len(log) == 0 || err != nil {
+		t.Fatal("Couldn't get log. err:", err, "| log:", log)
+	}
+
+	t.Log(" - Success getting log:", log)
+
+	// TODO: verify log results more, but it's sorta covered
+}
+
+// TODO: test log starting at various hashes
+// func TestLogHash(t *testing.T) {
+// }

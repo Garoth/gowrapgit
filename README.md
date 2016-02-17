@@ -30,10 +30,11 @@ Documentation: https://godoc.org/github.com/Garoth/gowrapgit
 
 - [X] Check If Is Repo
     - [X] Check If Is Bare Repo
-- [ ] Log
+- [X] Log
     - [X] General Commit Struct That Can Hold Relevant Data
-    - [ ] Hook Up Log To Produce Array of Commit Structs
-    - [ ] Unit Test Using Locally Made Repo
+    - [X] Hook Up Log To Produce Array of Commit Structs
+    - [X] Unit Test Using Locally Made Repo
+    - [ ] **(future)** Accept alternative formats
 - [X] Clone
     - [X] Clone Bare
 - [X] Checkout
@@ -46,7 +47,7 @@ Documentation: https://godoc.org/github.com/Garoth/gowrapgit
 - [ ] Worktree 
     - [ ] Spawn New Worktree From Parent
     - [ ] Find Parent Of Worktree
-- [ ] Tree Manipulation Features **(future)**
+- [ ] **(future)** Tree Manipulation Features
     - [ ] Fetch
     - [ ] Merge
     - [ ] Rebase

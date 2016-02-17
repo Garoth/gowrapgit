@@ -147,7 +147,7 @@ type Commit struct {
 
 func (commit *Commit) String() string {
 	return fmt.Sprintf("\n+ Commit: %s\n| Author: %s <%s>\n| Parent: %s\n"+
-		"| Timestamp: %d\n| Subject: %s\n+ Body: %s", commit.hash, commit.author,
+		"| Timestamp: %d\n| Subject: %s\n| Body: %s", commit.hash, commit.author,
 		commit.authorEmail, commit.parentHash, commit.timestamp,
 		commit.subject, commit.body)
 }
@@ -180,7 +180,35 @@ func NewCommit(path, hashish string) (*Commit, error) {
 }
 
 // Log returns an array of Commit objects, representing the history as like
-// git log. Newest commit is at index zero, oldest at the end.
-// func Log(path, hashish string) (*Commit[], error) {
+// git log. Newest commit is at index zero, oldest at the end. Leave hashish
+// as a blank string to get the default "git log" result.
+func Log(path, hashish string) ([]*Commit, error) {
+	logFormat := "%H" // Just the hashes
+	var cmd *exec.Cmd
 
-// }
+	if hashish == "" {
+		cmd = command("git", "log", "--pretty="+logFormat)
+	} else {
+		cmd = command("git", "log", "--pretty="+logFormat, hashish)
+	}
+	cmd.Dir = path
+	output, err := cmd.Output()
+	if err != nil {
+		return []*Commit{}, err
+	}
+
+	lineBytes := bytes.Split(output, []byte{'\n'})
+	// The last split is just an empty string, right?
+	lineBytes = lineBytes[0 : len(lineBytes)-1]
+	commits := make([]*Commit, len(lineBytes))
+
+	for x := 0; x < len(lineBytes); x++ {
+		commit, commitErr := NewCommit(path, string(lineBytes[x]))
+		if commitErr != nil {
+			return []*Commit{}, commitErr
+		}
+		commits[x] = commit
+	}
+
+	return commits, nil
+}
