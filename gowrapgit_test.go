@@ -209,11 +209,11 @@ func TestBranch(t *testing.T) {
 
 func TestNewCommit(t *testing.T) {
 	expected := &Commit{}
-	expected.author = "Andrei Thorp"
-	expected.authorEmail = "garoth@gmail.com"
-	expected.timestamp = 1000000000
-	expected.subject = "subject 2"
-	expected.body = "body message"
+	expected.Author = "Andrei Thorp"
+	expected.AuthorEmail = "garoth@gmail.com"
+	expected.Timestamp = 1000000000
+	expected.Subject = "subject 2"
+	expected.Body = "body message"
 
 	path := setupTestClone(false, t)
 	defer cleanupTestClone(path, t)
@@ -227,8 +227,8 @@ func TestNewCommit(t *testing.T) {
 	t.Logf(" - Created new Commit")
 
 	// TODO: should check hashes as well, but they change...
-	commit.hash = ""
-	commit.parentHash = ""
+	commit.Hash = ""
+	commit.ParentHash = ""
 
 	if reflect.DeepEqual(commit, expected) == false {
 		t.Fatal("Commit isn't as expected!\nUnexpected commit data = ", commit,

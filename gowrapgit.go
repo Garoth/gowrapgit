@@ -141,15 +141,15 @@ func Checkout(path, hashish string) error {
 
 // Commit struct that holds the sort of data that you'd expect from git log.
 type Commit struct {
-	hash, author, authorEmail, parentHash, subject, body string
-	timestamp                                            int
+	Hash, Author, AuthorEmail, ParentHash, Subject, Body string
+	Timestamp                                            int
 }
 
 func (commit *Commit) String() string {
 	return fmt.Sprintf("\n+ Commit: %s\n| Author: %s <%s>\n| Parent: %s\n"+
-		"| Timestamp: %d\n| Subject: %s\n| Body: %s", commit.hash, commit.author,
-		commit.authorEmail, commit.parentHash, commit.timestamp,
-		commit.subject, commit.body)
+		"| Timestamp: %d\n| Subject: %s\n| Body: %s", commit.Hash, commit.Author,
+		commit.AuthorEmail, commit.ParentHash, commit.Timestamp,
+		commit.Subject, commit.Body)
 }
 
 // NewCommit returns a commit object for the given repo path and hashish.
@@ -165,16 +165,16 @@ func NewCommit(path, hashish string) (*Commit, error) {
 	}
 
 	lineBytes := bytes.Split(output, []byte{'\n'})
-	commit.hash = string(bytes.TrimSpace(lineBytes[0]))
-	commit.author = string(bytes.TrimSpace(lineBytes[1]))
-	commit.authorEmail = string(bytes.TrimSpace(lineBytes[2]))
-	commit.timestamp, err = strconv.Atoi(string(bytes.TrimSpace(lineBytes[3])))
+	commit.Hash = string(bytes.TrimSpace(lineBytes[0]))
+	commit.Author = string(bytes.TrimSpace(lineBytes[1]))
+	commit.AuthorEmail = string(bytes.TrimSpace(lineBytes[2]))
+	commit.Timestamp, err = strconv.Atoi(string(bytes.TrimSpace(lineBytes[3])))
 	if err != nil {
 		return &Commit{}, err
 	}
-	commit.parentHash = string(bytes.TrimSpace(lineBytes[4]))
-	commit.subject = string(bytes.TrimSpace(lineBytes[5]))
-	commit.body = string(bytes.TrimSpace(bytes.Join(lineBytes[6:], []byte{'\n'})))
+	commit.ParentHash = string(bytes.TrimSpace(lineBytes[4]))
+	commit.Subject = string(bytes.TrimSpace(lineBytes[5]))
+	commit.Body = string(bytes.TrimSpace(bytes.Join(lineBytes[6:], []byte{'\n'})))
 
 	return commit, nil
 }
