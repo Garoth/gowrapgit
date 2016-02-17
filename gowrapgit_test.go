@@ -1,6 +1,7 @@
 package gowrapgit
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -36,9 +37,15 @@ func setupTestClone(bare bool, t *testing.T) string {
 
 	for x := 0; x < numCommits; x++ {
 		cmd := command("git", "commit", "--allow-empty",
+			"--date", "1000000000",
+			"--author", "Andrei Thorp <garoth@gmail.com>",
 			"-m", "subject "+strconv.Itoa(numCommits),
 			"-m", "body message")
 		cmd.Dir = path
+		env := os.Environ()
+		env = append(env, fmt.Sprintf("GIT_COMMITTER_DATE=%d", 1000000000))
+		cmd.Env = env
+
 		if err = cmd.Run(); err != nil {
 			t.Fatal("Couldn't make commit git:", err)
 		}
@@ -201,10 +208,17 @@ func TestBranch(t *testing.T) {
 }
 
 func TestNewCommit(t *testing.T) {
+	expected := &Commit{}
+	expected.author = "Andrei Thorp"
+	expected.authorEmail = "garoth@gmail.com"
+	expected.timestamp = 1000000000
+	expected.subject = "subject 3"
+	expected.body = "body message"
+
 	t.Log("Cloning a git repo...")
 
 	path := setupTestClone(false, t)
-	defer cleanupTestClone(path, t)
+	// defer cleanupTestClone(path, t)
 
 	t.Log(" - Test repo cloned to", prettyPath(path))
 
@@ -213,5 +227,16 @@ func TestNewCommit(t *testing.T) {
 		t.Fatal("Error creating new Commit object:", err)
 	}
 
-	t.Logf(" - Created new Commit object: %+v", commit)
+	t.Logf(" - Created new Commit")
+
+	// TODO: should check hashes as well, but they change...
+	commit.hash = ""
+	commit.parentHash = ""
+
+	if reflect.DeepEqual(commit, expected) == false {
+		t.Fatal("Commit isn't as expected!\nUnexpected commit data = ", commit,
+			"\nExpected commit data =", expected)
+	}
+
+	t.Log(" - New Commit matches expectations")
 }
