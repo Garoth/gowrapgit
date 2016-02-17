@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -17,21 +18,42 @@ func TestSanityCheck(t *testing.T) {
 }
 
 // Sets up a test repo that it clones from the internet and returns the path.
-func setupTestClone(bare bool, t *testing.T) (path string) {
+func setupTestClone(bare bool, t *testing.T) string {
 	var err error
-	source := "https://github.com/Garoth/go-signalhandlers"
+	var path string
+	numCommits := 3
 
 	path, err = ioutil.TempDir("", "gowrapgit")
 	if path == "" || err != nil {
 		t.Fatal("Couldn't create tmpdir:", err)
 	}
 
-	path = path + "/go-signalhandlers"
-	if err = Clone(source, path, bare); err != nil {
-		t.Fatal("Error cloning go-signalhandlers:", err)
+	cmd := command("git", "init")
+	cmd.Dir = path
+	if err = cmd.Run(); err != nil {
+		t.Fatal("Couldn't init git:", err)
 	}
 
-	return
+	for x := 0; x < numCommits; x++ {
+		cmd := command("git", "commit", "--allow-empty",
+			"-m", "subject "+strconv.Itoa(numCommits),
+			"-m", "body message")
+		cmd.Dir = path
+		if err = cmd.Run(); err != nil {
+			t.Fatal("Couldn't make commit git:", err)
+		}
+	}
+
+	if bare {
+		var path2 string
+		path2, err = ioutil.TempDir("", "gowrapgit")
+		path2 = path2 + "/clone"
+		Clone(path, path2, true)
+		defer cleanupTestClone(path, t)
+		return path2
+	}
+
+	return path
 }
 
 // Deletes the repo given by the path.
@@ -99,37 +121,38 @@ func TestFindGits(t *testing.T) {
 	t.Log("Creating fresh git clone...")
 
 	repo1 := setupTestClone(false, t)
-	location := filepath.Dir(repo1)
+	location, dirErr := ioutil.TempDir("", "gowrapgit")
+	if location == "" || dirErr != nil {
+		t.Fatal("Couldn't create tmpdir:", dirErr)
+	}
 	repo2 := filepath.Join(location, "a", "b", "c")
 	repo3 := filepath.Join(location, "flat")
 	repo4 := filepath.Join(location, "xxx", "yyy")
-	defer cleanupTestClone(repo1, t)
+	defer cleanupTestClone(location, t)
 
 	t.Log(" - Test repo 1 cloned to", prettyPath(repo1))
 
 	if err := Clone(repo1, repo2, true); err != nil {
 		t.Fatal("Failed to clone repo:", err)
 	}
-	defer cleanupTestClone(repo2, t)
 
 	t.Log(" - Test repo 2 cloned")
 
 	if err := Clone(repo1, repo3, false); err != nil {
 		t.Fatal("Failed to clone repo:", err)
 	}
-	defer cleanupTestClone(repo3, t)
 
 	t.Log(" - Test repo 3 cloned")
 
 	if err := Clone(repo2, repo4, false); err != nil {
 		t.Fatal("Failed to clone repo:", err)
 	}
-	defer cleanupTestClone(repo4, t)
 
 	t.Log(" - Test repo 4 cloned")
 
 	results := FindGits(location)
-	expected := []string{repo2, repo3, repo1, repo4}
+	// We don't find the starting repo since it's not under location
+	expected := []string{repo2, repo3, repo4}
 
 	if reflect.DeepEqual(results, expected) == false {
 		t.Fatal("FindGits failed. results =", results, "expected =", expected)
