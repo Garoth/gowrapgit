@@ -75,7 +75,7 @@ func prettyPath(path string) string {
 	last := filepath.Base(path)
 	secondLast := filepath.Base(filepath.Dir(path))
 	if last != "" && secondLast != "" {
-		return filepath.Join("...", last, secondLast)
+		return filepath.Join(" + Clone to ...", last, secondLast)
 	}
 
 	return "ERROR PRETTYING PATH!"
@@ -87,7 +87,7 @@ func TestClone(t *testing.T) {
 	path := setupTestClone(false, t)
 	defer cleanupTestClone(path, t)
 
-	t.Log(" - Test repo cloned to", prettyPath(path))
+	t.Log(prettyPath(path))
 
 	if IsRepo(path) != nil {
 		t.Fatal("Newly cloned repo doesn't exist?")
@@ -108,7 +108,7 @@ func TestCloneBare(t *testing.T) {
 	path := setupTestClone(true, t)
 	defer cleanupTestClone(path, t)
 
-	t.Log(" - Test repo cloned to", prettyPath(path))
+	t.Log(prettyPath(path))
 
 	if IsRepo(path) != nil {
 		t.Fatal("Newly cloned repo doesn't exist?")
@@ -137,7 +137,7 @@ func TestFindGits(t *testing.T) {
 	repo4 := filepath.Join(location, "xxx", "yyy")
 	defer cleanupTestClone(location, t)
 
-	t.Log(" - Test repo 1 cloned to", prettyPath(repo1))
+	t.Log(prettyPath(repo1))
 
 	if err := Clone(repo1, repo2, true); err != nil {
 		t.Fatal("Failed to clone repo:", err)
@@ -165,7 +165,7 @@ func TestFindGits(t *testing.T) {
 		t.Fatal("FindGits failed. results =", results, "expected =", expected)
 	}
 
-	t.Log(" - FindGits found repos successfully! count =", len(results))
+	t.Log(" - FindGits succesfully found", len(results))
 }
 
 func TestBranch(t *testing.T) {
@@ -174,7 +174,7 @@ func TestBranch(t *testing.T) {
 	path := setupTestClone(false, t)
 	defer cleanupTestClone(path, t)
 
-	t.Log(" - Test repo cloned to", prettyPath(path))
+	t.Log(prettyPath(path))
 
 	branch, err := CurrentBranch(path)
 
@@ -207,17 +207,28 @@ func TestBranch(t *testing.T) {
 	t.Log(" - Success checking detached head branch:", branch)
 }
 
+func compareCommits(one, two *Commit) bool {
+	// Should check hashes as well, but they change...
+	one.Hash = ""
+	two.Hash = ""
+	one.ParentHash = ""
+	two.ParentHash = ""
+
+	return reflect.DeepEqual(one, two)
+}
+
 func TestNewCommit(t *testing.T) {
-	expected := &Commit{}
-	expected.Author = "Andrei Thorp"
-	expected.AuthorEmail = "garoth@gmail.com"
-	expected.Timestamp = 1000000000
-	expected.Subject = "subject 2"
-	expected.Body = "body message"
+	expected := &Commit{
+		Author:      "Andrei Thorp",
+		AuthorEmail: "garoth@gmail.com",
+		Timestamp:   1000000000,
+		Subject:     "subject 2",
+		Body:        "body message",
+	}
 
 	path := setupTestClone(false, t)
 	defer cleanupTestClone(path, t)
-	t.Log(" - Test repo cloned to", prettyPath(path))
+	t.Log(prettyPath(path))
 
 	commit, err := NewCommit(path, "HEAD")
 	if err != nil {
@@ -226,12 +237,9 @@ func TestNewCommit(t *testing.T) {
 
 	t.Logf(" - Created new Commit")
 
-	// TODO: should check hashes as well, but they change...
-	commit.Hash = ""
-	commit.ParentHash = ""
-
-	if reflect.DeepEqual(commit, expected) == false {
-		t.Fatal("Commit isn't as expected!\nUnexpected commit data = ", commit,
+	if compareCommits(commit, expected) == false {
+		t.Fatal("Commit isn't as expected!"+
+			"\nUnexpected commit data = ", commit,
 			"\nExpected commit data =", expected)
 	}
 
@@ -241,16 +249,48 @@ func TestNewCommit(t *testing.T) {
 func TestLog(t *testing.T) {
 	path := setupTestClone(false, t)
 	defer cleanupTestClone(path, t)
-	t.Log(" - Test repo cloned to", prettyPath(path))
+	t.Log(prettyPath(path))
 
 	log, err := Log(path, "")
 	if len(log) == 0 || err != nil {
 		t.Fatal("Couldn't get log. err:", err, "| log:", log)
 	}
 
-	t.Log(" - Success getting log:", log)
+	t.Log(" - Success getting log")
 
-	// TODO: verify log results more, but it's sorta covered
+	expected := []*Commit{
+		&Commit{
+			Author:      "Andrei Thorp",
+			AuthorEmail: "garoth@gmail.com",
+			Timestamp:   1000000000,
+			Subject:     "subject 2",
+			Body:        "body message",
+		},
+		&Commit{
+			Author:      "Andrei Thorp",
+			AuthorEmail: "garoth@gmail.com",
+			Timestamp:   1000000000,
+			Subject:     "subject 1",
+			Body:        "body message",
+		},
+		&Commit{
+			Author:      "Andrei Thorp",
+			AuthorEmail: "garoth@gmail.com",
+			Timestamp:   1000000000,
+			Subject:     "subject 0",
+			Body:        "body message",
+		},
+	}
+
+	for i := 0; i < len(expected); i++ {
+		if compareCommits(log[i], expected[i]) == false {
+			t.Fatal("Commit isn't as expected!"+
+				"\nUnexpected commit data = ", log[i],
+				"\nExpected commit data =", expected[i])
+		}
+
+		t.Log(" - Log @", i, "valid:", log[i].Subject)
+	}
 }
 
 // TODO: test log starting at various hashes
