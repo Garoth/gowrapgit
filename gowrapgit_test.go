@@ -168,7 +168,7 @@ func TestFindGits(t *testing.T) {
 	t.Log(" - FindGits succesfully found", len(results))
 }
 
-func TestBranch(t *testing.T) {
+func TestCurrentBranch(t *testing.T) {
 	t.Log("Cloning a git repo...")
 
 	path := setupTestClone(false, t)
@@ -205,6 +205,27 @@ func TestBranch(t *testing.T) {
 	}
 
 	t.Log(" - Success checking detached head branch:", branch)
+}
+
+func TestListBranches(t *testing.T) {
+	t.Log("Cloning a git repo...")
+
+	path := setupTestClone(false, t)
+	defer cleanupTestClone(path, t)
+
+	t.Log(prettyPath(path))
+
+	branches, err := ListBranches(path, true)
+
+	if err != nil {
+		t.Fatal("Couldn't check local branches:", err)
+	}
+
+	t.Log(branches)
+
+	// TODO:
+	//  - Set up clone/parent relationships to test multiple remotes
+	//  - Validate that branches are coming back correct
 }
 
 func compareCommits(one, two *Commit) bool {
@@ -292,7 +313,3 @@ func TestLog(t *testing.T) {
 		t.Log(" - Log @", i, "valid:", log[i].Subject)
 	}
 }
-
-// TODO: test log starting at various hashes
-// func TestLogHash(t *testing.T) {
-// }

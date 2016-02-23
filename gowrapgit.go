@@ -123,6 +123,38 @@ func CurrentBranch(path string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
+// ListBranches returns a list of branch strings for the git repo at
+// the given path. The `local` parameter switches between local and
+// remote branches.
+func ListBranches(path string, local bool) ([]string, error) {
+	if err := sanityCheck(); err != nil {
+		return []string{}, err
+	}
+
+	var gitRefsPath string
+	if local {
+		gitRefsPath = filepath.Join("refs", "heads")
+	} else {
+		gitRefsPath = filepath.Join("refs", "remotes")
+	}
+
+	cmd := command("git", "for-each-ref", "--format='%(refname)'", gitRefsPath)
+	cmd.Dir = path
+	out, err := cmd.Output()
+	if err != nil {
+		return []string{}, err
+	}
+
+	lineBytes := bytes.Split(out, []byte{'\n'})
+	// The last split is just an empty string
+	lineStrings := make([]string, len(lineBytes))
+	for i, byteLine := range lineBytes {
+		lineStrings[i] = string(bytes.TrimSpace(byteLine))
+	}
+
+	return lineStrings, nil
+}
+
 // Checkout runs the git checkout command. This can be used to switch branches
 // or to check out disconnected heads.
 func Checkout(path, hashish string) error {
