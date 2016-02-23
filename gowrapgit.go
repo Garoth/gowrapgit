@@ -123,6 +123,28 @@ func CurrentBranch(path string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
+// MakeBranch creates a new local branch with the given `newBranchName`. If
+// `sourceBranchName` is not "", then it is used as the basis for the new
+// branch.
+func MakeBranch(path, newBranchName, sourceBranchName string) error {
+	if err := sanityCheck(); err != nil {
+		return err
+	}
+
+	var cmd *exec.Cmd
+	if sourceBranchName == "" {
+		cmd = command("git", "branch", newBranchName)
+	} else {
+		cmd = command("git", "branch", newBranchName, sourceBranchName)
+	}
+	cmd.Dir = path
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ListBranches returns a list of branch strings for the git repo at
 // the given path. The `local` parameter switches between local and
 // remote branches.
@@ -146,10 +168,14 @@ func ListBranches(path string, local bool) ([]string, error) {
 	}
 
 	lineBytes := bytes.Split(out, []byte{'\n'})
-	// The last split is just an empty string
 	lineStrings := make([]string, len(lineBytes))
 	for i, byteLine := range lineBytes {
-		lineStrings[i] = string(bytes.TrimSpace(byteLine))
+		lineStrings[i] = strings.Trim(string(bytes.TrimSpace(byteLine)), "'")
+	}
+
+	// The last "line" can be just an empty string
+	if lineStrings[len(lineStrings)-1] == "" {
+		lineStrings = lineStrings[:len(lineStrings)-1]
 	}
 
 	return lineStrings, nil

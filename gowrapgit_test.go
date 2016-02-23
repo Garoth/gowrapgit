@@ -210,22 +210,69 @@ func TestCurrentBranch(t *testing.T) {
 func TestListBranches(t *testing.T) {
 	t.Log("Cloning a git repo...")
 
-	path := setupTestClone(false, t)
-	defer cleanupTestClone(path, t)
+	repo1 := setupTestClone(false, t)
+	defer cleanupTestClone(repo1, t)
 
-	t.Log(prettyPath(path))
+	t.Log(prettyPath(repo1))
 
-	branches, err := ListBranches(path, true)
+	// Creating some "upstream" branches
+	if err := MakeBranch(repo1, "branch-one", "master"); err != nil {
+		t.Fatal("Couldn't create upstream branch:", err)
+	}
 
+	t.Log(" - New `branch-one` from `master`")
+
+	if err := MakeBranch(repo1, "branch-two", ""); err != nil {
+		t.Fatal("Couldn't create upstream branch:", err)
+	}
+
+	t.Log(" - New `branch-one` from `HEAD`")
+
+	// Creating temp dir to clone to
+	location, dirErr := ioutil.TempDir("", "gowrapgit")
+	if location == "" || dirErr != nil {
+		t.Fatal("Couldn't create tmpdir:", dirErr)
+	}
+	repo2 := filepath.Join(location, "a", "b", "c")
+	defer cleanupTestClone(location, t)
+
+	// Cloning test repo to new copy
+	if err := Clone(repo1, repo2, false); err != nil {
+		t.Fatal("Failed to clone repo:", err)
+	}
+
+	t.Log(" - Test repo 2 cloned")
+
+	// Creating some local branches
+	if err := MakeBranch(repo2, "local-one", "master"); err != nil {
+		t.Fatal("Couldn't create local branch:", err)
+	}
+
+	t.Log(" - New `local-one` from `master`")
+
+	if err := MakeBranch(repo2, "local-two", "origin/branch-one"); err != nil {
+		t.Fatal("Couldn't create local branch:", err)
+	}
+
+	t.Log(" - New `local-two` from `origin/branch-two`")
+
+	// Check created branches
+	expectedLocalBranches := []string{"refs/heads/local-one",
+		"refs/heads/local-two",
+		"refs/heads/master"}
+	branches, err := ListBranches(repo2, true)
 	if err != nil {
 		t.Fatal("Couldn't check local branches:", err)
 	}
 
-	t.Log(branches)
+	if reflect.DeepEqual(expectedLocalBranches, branches) == false {
+		t.Fatal("Unexpected result of getting branches. EXPECTED =",
+			expectedLocalBranches, "| ACTUAL =", branches)
+	}
 
-	// TODO:
-	//  - Set up clone/parent relationships to test multiple remotes
-	//  - Validate that branches are coming back correct
+	t.Log(" - Confirmed that ListBranches returns correctly")
+
+	// TODO: confirm remote branches are working too
 }
 
 func compareCommits(one, two *Commit) bool {

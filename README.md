@@ -42,6 +42,7 @@ Documentation: https://godoc.org/github.com/Garoth/gowrapgit
     - [X] Get Current Branch
     - [X] Get All Local Branches
     - [X] Get All Remote Branches
+    - [X] Make Local Branch
 - [X] Find All Git Repos Recursively From Path
 - [ ] Reset (hard and soft)
 - [ ] Worktree 
