@@ -38,10 +38,10 @@ Documentation: https://godoc.org/github.com/Garoth/gowrapgit
 - [X] Clone
     - [X] Clone Bare
 - [X] Checkout
-- [ ] Branch
+- [X] Branch
     - [X] Get Current Branch
-    - [ ] Get All Local Branches
-    - [ ] Get All Remote Branches
+    - [X] Get All Local Branches
+    - [X] Get All Remote Branches
 - [X] Find All Git Repos Recursively From Path
 - [ ] Reset (hard and soft)
 - [ ] Worktree 
