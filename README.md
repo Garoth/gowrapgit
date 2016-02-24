@@ -47,6 +47,7 @@ Documentation: https://godoc.org/github.com/Garoth/gowrapgit
 - [X] Find All Git Repos Recursively From Path
 - [X] Reset
     - [X] --hard Option
+- [ ] **(future)** Status
 - [ ] **(future)** Worktree 
     - [ ] Spawn New Worktree From Parent
     - [ ] Find Parent Of Worktree
