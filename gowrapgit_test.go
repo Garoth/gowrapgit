@@ -124,7 +124,7 @@ func TestCloneBare(t *testing.T) {
 
 }
 
-func TestFindGits(t *testing.T) {
+func TestFindRepos(t *testing.T) {
 	t.Log("Creating fresh git clone...")
 
 	repo1 := setupTestClone(false, t)
@@ -157,15 +157,15 @@ func TestFindGits(t *testing.T) {
 
 	t.Log(" - Test repo 4 cloned")
 
-	results := FindGits(location)
+	results := FindRepos(location)
 	// We don't find the starting repo since it's not under location
 	expected := []string{repo2, repo3, repo4}
 
 	if reflect.DeepEqual(results, expected) == false {
-		t.Fatal("FindGits failed. results =", results, "expected =", expected)
+		t.Fatal("FindRepos failed. results =", results, "expected =", expected)
 	}
 
-	t.Log(" - FindGits succesfully found", len(results))
+	t.Log(" - FindRepos succesfully found", len(results))
 }
 
 func TestCurrentBranch(t *testing.T) {
@@ -359,4 +359,40 @@ func TestLog(t *testing.T) {
 
 		t.Log(" - Log @", i, "valid:", log[i].Subject)
 	}
+}
+
+func TestReset(t *testing.T) {
+	t.Log("Cloning a git repo...")
+
+	path := setupTestClone(false, t)
+	defer cleanupTestClone(path, t)
+
+	t.Log(prettyPath(path))
+
+	if err := Reset(path, "HEAD~1", true); err != nil {
+		t.Fatal("Failed to reset --hard to HEAD~1:", err)
+	}
+
+	expected := &Commit{
+		Author:      "Andrei Thorp",
+		AuthorEmail: "garoth@gmail.com",
+		Timestamp:   1000000000,
+		Subject:     "subject 1",
+		Body:        "body message",
+	}
+
+	commit, err := NewCommit(path, "HEAD")
+	if err != nil {
+		t.Fatal("Error creating new Commit object:", err)
+	}
+
+	if compareCommits(commit, expected) == false {
+		t.Fatal("Commit isn't as expected!"+
+			"\nUnexpected commit data = ", commit,
+			"\nExpected commit data =", expected)
+	}
+
+	t.Logf(" - Reset to commit '%v'", commit.Subject)
+
+	// TODO test if the default "mixed" reset is working
 }

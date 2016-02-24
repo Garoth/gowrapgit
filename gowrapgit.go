@@ -87,9 +87,9 @@ func Clone(cloneFromPath, cloneToPath string, bare bool) error {
 	return command("git", "clone", cloneFromPath, cloneToPath).Run()
 }
 
-// FindGits returns a set of paths for all found git repositories under the
+// FindRepos returns a set of paths for all found git repositories under the
 // given starting filepath. This will recursively walk down to find them.
-func FindGits(start string) []string {
+func FindRepos(start string) []string {
 	var paths []string
 
 	walker := func(path string, info os.FileInfo, err error) error {
@@ -269,4 +269,25 @@ func Log(path, hashish string) ([]*Commit, error) {
 	}
 
 	return commits, nil
+}
+
+// Reset `git reset`s the repo at `path` to `hashish`. The flag `hard`
+// adds calls `git reset --hard` instead.
+func Reset(path, hashish string, hard bool) error {
+	if err := sanityCheck(); err != nil {
+		return err
+	}
+
+	var cmd *exec.Cmd
+	if hard {
+		cmd = command("git", "reset", "--hard", hashish)
+	} else {
+		cmd = command("git", "reset", hashish)
+	}
+	cmd.Dir = path
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	return nil
 }
