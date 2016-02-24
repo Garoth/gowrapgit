@@ -1,5 +1,7 @@
 # Go Wrap Git
 
+![Go Wrap Git Logo](https://garoth.github.com/img/gowrapgit-logo-small.png)
+
 This project provides a Go API to common Git functions. It is implemented
 as a simple `git` command shell wrapper, so it doesn't have any complex
 non-Go dependencies. Want to know if it's any good?
